@@ -1,2 +1,8 @@
 all:
-	g++ -o data data/dataset.cpp utils/functions.cpp -lmingw32 
+	g++ -o main main.cpp utils/matrix.cpp utils/functions.cpp data/dataset.cpp -lmingw32 
+
+
+
+
+#-I C:\users\hanse\eigen
+

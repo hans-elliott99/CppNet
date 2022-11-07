@@ -4,6 +4,9 @@
 #include <vector>
 #include <iostream>
 
+#include "../utils/functions.h"
+#include "../utils/matrix.h"
+
 #pragma once
 
 enum DataSplit {TRAIN=0, TEST};
@@ -32,13 +35,18 @@ public:
     void make_split(double ptrain);
 
     // Dataset dimensions
-    void shape(DataSplit s);
+    // void printshape(DataSplit s);
+    std::vector<size_t> shape(DataSplit s, bool lab=false, bool print=false);
 
     // Print data
     void head(const int nrows);
 
     // get inputs
-    const std::vector<const std::vector<double>*>& inputs(DataSplit s) const;
+    // const std::vector<const std::vector<double>*>& inputs(DataSplit s) const;
     // get labels
-    const std::vector<const std::vector<double>*>& labels(DataSplit s) const;
+    // const std::vector<const std::vector<double>*>& labels(DataSplit s) const;
+
+    // convert to matrix
+    Matrix toMatrix();
+
 };

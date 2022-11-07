@@ -1,6 +1,6 @@
 #include "dataset.h"
 #include "../utils/functions.h"
-
+#include "../utils/matrix.h"
 
 Dataset::Dataset(std::string filename)
 {
@@ -49,29 +49,6 @@ void Dataset::make_split(double ptrain)
     }
 }
 
-void Dataset::shape(DataSplit s)
-{
-    std::vector<const std::vector<double>*> data;
-    switch(s)
-    {
-    case DataSplit::TRAIN:
-        data = _Xtrain;
-        break;
-    case DataSplit::TEST:
-        data = _Xtest;
-        break;
-    }
-
-    std::vector<unsigned long long> shape;
-    shape = {data.size(), data.size()};
-    
-    std::cout << '(';
-    for (size_t i {0}; i < shape.size(); i++) //scalable to more than 2 dims
-        {
-            std::cout << shape[i] << ", ";
-        }        
-        std::cout << "\b\b)";
-}
 
 void Dataset::head(const int nrows)
 {
@@ -85,25 +62,70 @@ void Dataset::head(const int nrows)
     }
 }
 
-const std::vector<const std::vector<double>*>&
-Dataset::inputs(DataSplit s) const                       //https://stackoverflow.com/questions/3141087/what-is-meant-with-const-at-end-of-function-declaration
-{
-    if (DataSplit::TRAIN)
-        return _Xtrain;
-    else
-        return _Xtest;
-}
+// const std::vector<const std::vector<double>*>&
+// Dataset::inputs(DataSplit s) const                       //https://stackoverflow.com/questions/3141087/what-is-meant-with-const-at-end-of-function-declaration
+// {
+//     if (s == DataSplit::TRAIN)
+//         {return _Xtrain; }
+//     else
+//         {return _Xtest; }
+// }
     
-const std::vector<const std::vector<double>*>&
-Dataset::labels(DataSplit s) const
+// const std::vector<const std::vector<double>*>&
+// Dataset::labels(DataSplit s) const
+// {
+//     if (s == DataSplit::TRAIN)
+//         {return _Ytrain; }
+//     else
+//         {return _Ytest; }
+// }
+
+Matrix Dataset::toMatrix()
 {
-    if (DataSplit::TRAIN)
-        return _Ytrain;
-    else
-        return _Ytest;
+    Matrix xtr(_Xtrain.size(), (*_Xtrain[0]).size());
+    for (size_t i {0}; i < _Xtrain.size(); i++)
+    {
+        xtr.rowfill(i, *_Xtrain[i]);
+    }
+    return xtr;
 }
 
 
+std::vector<size_t> 
+Dataset::shape(DataSplit s, bool lab, bool print)
+{
+    std::vector<const std::vector<double>*> data;
+
+    switch(s)
+    {
+    case DataSplit::TRAIN:
+        if (!lab)
+            data = _Xtrain;
+        else 
+            data = _Ytrain;
+        break;
+    case DataSplit::TEST:
+        if (!lab)
+            data = _Xtest;
+        else
+            data = _Ytest;
+        break;
+    }
+
+    std::vector<size_t> shape {data.size(), (*data[0]).size()};
+
+    if (print)
+    {
+        std::cout << '(';
+        for (size_t e : shape) //scalable to more than 2 dims
+            {
+                std::cout << e << ", ";
+            }        
+            std::cout << "\b\b)";
+    }
+
+    return shape;
+}
 
 // int main()
 // {
