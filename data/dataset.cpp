@@ -8,15 +8,15 @@ Dataset::Dataset(std::string filename)
     if (in_file.fail()) 
         {std::cout << "File not found." << '\n'; }
 
-    std::vector<double> row;
-    double a;
+    std::vector<float> row;
+    float a;
     while (in_file >> a)
     {
         row.push_back(a);
 
         if (in_file.get() == '\n')
         {
-            double label {row[row.size() - 1]};
+            float label {row[row.size() - 1]};
             row.pop_back(); //remove last element in vector (ie, the newline)
 
             // Add samples and labels to data vectors
@@ -54,47 +54,35 @@ void Dataset::head(const int nrows)
 {
     for (size_t i {0}; i < nrows; i++)
     {
-        for (double e: _X[i])
+        for (float e: _X[i])
             {std::cout << "| " << e << '\t';}
-        for (double e: _Y[i]) 
+        for (float e: _Y[i]) 
             {std::cout << "| label: " << e << '\n';}
             
     }
 }
 
-// const std::vector<const std::vector<double>*>&
-// Dataset::inputs(DataSplit s) const                       //https://stackoverflow.com/questions/3141087/what-is-meant-with-const-at-end-of-function-declaration
-// {
-//     if (s == DataSplit::TRAIN)
-//         {return _Xtrain; }
-//     else
-//         {return _Xtest; }
-// }
-    
-// const std::vector<const std::vector<double>*>&
-// Dataset::labels(DataSplit s) const
-// {
-//     if (s == DataSplit::TRAIN)
-//         {return _Ytrain; }
-//     else
-//         {return _Ytest; }
-// }
-
-Matrix Dataset::toMatrix()
+Matrix<float> Dataset::toMatrix(DataSplit s, bool label)
 {
-    Matrix xtr(_Xtrain.size(), (*_Xtrain[0]).size());
-    for (size_t i {0}; i < _Xtrain.size(); i++)
-    {
-        xtr.rowfill(i, *_Xtrain[i]);
-    }
-    return xtr;
-}
+    auto _d = _getsplit(s, label); 
 
+    const size_t rows {_d.size()};
+    const size_t cols {(*_d[0]).size()};
+    Matrix<float> mat(rows, cols);
+
+    for (size_t i {0}; i < rows; i++)
+        for (size_t j {0}; j < cols; j++)
+        {
+            mat.data[i][j] = (*_d[i])[j];
+        }
+    
+    return mat;
+}
 
 std::vector<size_t> 
 Dataset::shape(DataSplit s, bool lab, bool print)
 {
-    std::vector<const std::vector<double>*> data;
+    std::vector<const std::vector<float>*> data;
 
     switch(s)
     {
@@ -121,25 +109,28 @@ Dataset::shape(DataSplit s, bool lab, bool print)
             {
                 std::cout << e << ", ";
             }        
-            std::cout << "\b\b)";
+            std::cout << "\b\b)\n";
     }
 
     return shape;
 }
 
-// int main()
-// {
-//     Dataset data("C:\\Users\\hanse\\Documents\\ml_code\\CppNet\\data1000.txt");
 
-//     data.head(5);
-//     data.make_split(0.8);
-
-//     data.shape(DataSplit::TRAIN);
-//     data.shape(DataSplit::TEST);
-
-//     data.inputs(DataSplit::TRAIN);
-//     data.inputs(DataSplit::TEST);
-//     data.labels(DataSplit::TRAIN);
-//     data.labels(DataSplit::TEST);
-
-// }
+const std::vector<const std::vector<float>*>&
+Dataset::_getsplit(DataSplit s, bool label) const
+{
+    if (s==DataSplit::TEST)
+    {
+        if (label)
+            return _Ytest;
+        else
+            return _Xtest;
+    }
+    else
+    {
+        if (label)
+            return _Ytrain;
+        else
+            return _Xtrain;
+    }
+}

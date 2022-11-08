@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <vector>
 #include <iostream>
-
 #include "../utils/functions.h"
 #include "../utils/matrix.h"
 
@@ -15,15 +14,18 @@ class Dataset
 {
 private:
        
-    std::vector<std::vector<double>> _X;
-    std::vector<std::vector<double>> _Y;
+    std::vector<std::vector<float>> _X;
+    std::vector<std::vector<float>> _Y;
       
-    std::vector<const std::vector<double>*> _Xtrain;
-    std::vector<const std::vector<double>*> _Ytrain;
-    std::vector<const std::vector<double>*> _Xtest;
-    std::vector<const std::vector<double>*> _Ytest;
+    std::vector<const std::vector<float>*> _Xtrain;
+    std::vector<const std::vector<float>*> _Ytrain;
+    std::vector<const std::vector<float>*> _Xtest;
+    std::vector<const std::vector<float>*> _Ytest;
 
+private:
 
+    const std::vector<const std::vector<float>*>&
+                    _getsplit(DataSplit s, bool label=false) const;
 
 public:
     //Construct
@@ -41,12 +43,10 @@ public:
     // Print data
     void head(const int nrows);
 
-    // get inputs
-    // const std::vector<const std::vector<double>*>& inputs(DataSplit s) const;
-    // get labels
-    // const std::vector<const std::vector<double>*>& labels(DataSplit s) const;
-
     // convert to matrix
-    Matrix toMatrix();
+    // template <typename T>
+    Matrix<float> toMatrix(DataSplit s, bool label=false);
+
+    void test();
 
 };

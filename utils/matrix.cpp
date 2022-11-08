@@ -7,98 +7,250 @@
 #include "functions.h"
 #include "matrix.h"
 
-
-Matrix::Matrix(size_t shape_i, size_t shape_j)
+template <typename T>
+Matrix<T>::Matrix(size_t shape_i, size_t shape_j)
 {
-
     // Matrix of 0s by default 
-    std::vector<std::vector<double>> M{shape_i, std::vector<double>(shape_j, 0.)};
+    for (size_t i {0}; i < shape_i; i++)
+    {
+        data.push_back(std::vector<T>(shape_j, 0));
+    }
 
     _shape_i = shape_i;
     _shape_j = shape_j;
-
 }
+template <typename T>
+Matrix<T>::~Matrix() { }
 
-
-void Matrix::rowfill(size_t idx, const std::vector<double> &datarow)
+/**
+ * OPERATORS
+*/
+template <typename T>
+Matrix<T> Matrix<T>::operator+(const T& scalar)
 {
-    assert (datarow.size() == _shape_j);
-    M[idx] = datarow;
-}
-
-
-void Matrix::randomize(int low, int high)
-{
-    for (size_t i {0}; i < M.size(); i++)
-        for (size_t j {0}; j < M.size(); j++)
-            {
-                M[i][j] = random(low, high);
-            }
-}
-
-
-void Matrix::print(int nrow)
-{
-    if (nrow == -1) 
-        {nrow = M.size(); }
-    for (size_t i {0}; i < nrow; i++)
+    Matrix output(_shape_i, _shape_j);
+    // Broadcast scalar into a j-length vector
+    std::vector<T> vec(_shape_j, scalar);  
+    for (size_t i {0}; i < _shape_i; i++)
     {
-        for (double e: M[i])
+        std::transform(
+            data[i].begin(), data[i].end(),
+            vec.begin(),
+            output.data[i].begin(),
+            std::plus<T>()
+        );
+    }
+    return output;
+}
+
+template <typename T>
+Matrix<T> Matrix<T>::operator-(const T& scalar)
+{
+    return operator+(-scalar);
+}
+template <typename T>
+Matrix<T> Matrix<T>::operator*(const T& scalar)
+{
+    Matrix output(_shape_i, _shape_j);
+    // Broadcast scalar into a j-length vector
+    std::vector<T> vec(_shape_j, scalar);  
+    for (size_t i {0}; i < _shape_i; i++)
+    {
+        std::transform(
+            data[i].begin(), data[i].end(),
+            vec.begin(),
+            output.data[i].begin(),
+            std::multiplies<T>()
+        );
+    }
+    return output;
+}
+
+template <typename T>
+Matrix<T> Matrix<T>::operator/(const T& scalar)
+{
+    return operator*(1 / scalar);
+}
+
+// Returns reference to the vector at the given index.
+template <typename T>
+std::vector<T>& Matrix<T>::operator[](int idx)
+{
+    int nrows = static_cast<int>(_shape_i);
+    assert (
+        (abs(idx) < nrows) && "Index out of range"
+    );
+    if (idx < 0)
+        idx = nrows - abs(idx);
+    return data[idx];
+}
+
+template <typename Y>
+std::ostream& operator<<(std::ostream& stream, const Matrix<Y>& matrix)
+{ 
+    stream << '\n';
+    for (size_t i {0}; i < matrix._shape_i; i++)
+    {
+        for (Y e: matrix.data[i])
             {std::cout << e << " \t";}
         std::cout<<'\n';
+    }
+    return stream;
+}
+
+/**
+ * std::vector-like methods
+*/
+template <typename T>
+size_t Matrix<T>::size(size_t axis)
+{
+    if (axis == 0)
+        return _shape_i;
+    else
+        return _shape_j;
+}
+
+
+/**
+ * Modifiers
+*/
+template <typename T>
+void Matrix<T>::add(const Matrix<T>& B)
+{
+    const size_t Brows = B.data.size();
+    const size_t Bcols = B.data[0].size();
+
+    assert (_shape_i == Brows); assert (_shape_j == Bcols);
+
+    for (size_t i {0}; i < _shape_i; i++)
+    {
+        // Modify the matrix's data inplace
+        std::transform(
+            data[i].begin(), data[i].end(),
+            B.data[i].begin(),
+            data[i].begin(),
+            std::plus<T>()
+        );
+    }
+}
+
+template <typename T>
+void Matrix<T>::fill(T value)
+{
+    for (size_t i {0}; i < _shape_i; i++)
+    {
+        data[i] = std::vector<T>(_shape_j, value);
+    }
+}
+
+template <typename T>
+void Matrix<T>::identity(T value)
+{
+    assert (_shape_i == _shape_j); //n x n only
+    for (size_t e {0}; e < _shape_i; e++)
+        data[e][e] = value;
+}
+
+template <typename T>
+void Matrix<T>::randomize(int low, int high)
+{
+    for (size_t i {0}; i < _shape_i; i++)
+        for (size_t j {0}; j < _shape_j; j++)
+        {
+            data[i][j] = random(low, high);
+        }
+}
+
+template <typename T>
+void Matrix<T>::apply(std::function<T(T)> fun)
+{
+    for (size_t i {0}; i < _shape_i; i++)
+    {
+        std::transform(
+            data[i].begin(), data[i].end(),
+            data[i].begin(),
+            fun
+        );
     }
 }
 
 
 
-void Matrix::shape()
+
+/**
+ * Utilities
+*/
+template <typename T>
+void Matrix<T>::print(int nrow)
+{
+    if (nrow == -1) 
+        {nrow = _shape_i; }
+
+    for (size_t i {0}; i < nrow; i++)
+    {
+        for (T e: data[i])
+            {std::cout << e << " \t";}
+        std::cout<<'\n';
+    }
+}
+
+template <typename T>
+void Matrix<T>::shape()
 {
     std::cout << "(" << _shape_i << ", " << _shape_j << ")\n";
 }
 
 
 
-std::vector<std::vector<double>> 
-matmul(std::vector<std::vector<double>> &A, std::vector<std::vector<double>> &B)
+
+// Functions
+template <typename T>
+Matrix<T> matmul(const Matrix<T>& A, const Matrix<T>& B)
 {
-    assert (A[0].size() == B.size());
+    const size_t Arows = A.data.size();
+    const size_t Acols = A.data[0].size();
+    const size_t Brows = B.data.size();
+    const size_t Bcols = B.data[0].size();
+    assert (Acols == Brows);
 
-    std::vector<std::vector<double>> output;
-    std::vector<double> row;
-    double product;
+    Matrix<T> output(Arows, Bcols);
+    std::vector<T> row;
+    T product;
 
-    for (size_t i {0}; i < A.size(); i++) //rows in a
+    for (size_t i {0}; i < Arows; i++) //rows in a
     {
-        for (size_t j {0}; j < B[0].size(); j++) //cols in b
+        for (size_t j {0}; j < Bcols; j++) //cols in b
         {
             product = 0;
-            for (size_t v {0}; v < A[0].size(); v++) //elements in each row
-                { product += A[i][v] * B[v][j]; }
+            for (size_t v {0}; v < Acols; v++) //elements in each row
+                { product += A.data[i][v] * B.data[v][j]; }
             
             row.push_back(product);
         }        
-        output.push_back(row);
+        output.data[i] = {row};
         row.clear();
     }
 
     return output;
 }
 
+template <typename T>
+Matrix<T> addition(const Matrix<T>& A, const Matrix<T>& B)
+{
+    const size_t Arows = A.data.size();
+    const size_t Acols = A.data[0].size();
+    const size_t Brows = B.data.size();
+    const size_t Bcols = B.data[0].size();
 
+    assert (Arows == Brows); assert (Acols == Bcols);
 
-// int main()
-// {
-//     std::vector<std::vector<double>> A = {{1., 2., 3.},
-//                                           {1., 2., 3.}};
-//     std::vector<std::vector<double>> B = {{1., 2.}, 
-//                                           {1., 2.}, 
-//                                           {1., 2.}};
-//     std::vector<std::vector<double>> C;
-
-//     C = matmul(A, B);
-//     // print_matrix(C);
-
-//     Matrix m(5, 5);
-//     m.randomize(-1, 1);
-//     m.print();
-// }
+    Matrix output(Arows, Acols);
+    for (size_t i {0}; i < Arows; i++)
+    {
+        std::transform(A.data[i].begin(), A.data[i].end(), B.data[i].begin(),
+                       output.data[i].begin(),
+                       std::plus<T>()
+                       );
+    }
+    return output;
+}

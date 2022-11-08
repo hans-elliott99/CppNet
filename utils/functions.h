@@ -6,12 +6,12 @@
 
 #pragma once
 
-double sigmoid(double x);
-double sigmoid_derivative(double x);
+float sigmoid(float x);
+float sigmoid_derivative(float x);
 
-double relu(double x);
-double relu_derivative(double x);
+float relu(float x);
+float relu_derivative(float x);
 
-double random(double low, double high);
+float random(float low, float high);
 
-double euclidean_distance(const std::vector<double>& vec1,  const std::vector<double>& vec2);
+float euclidean_distance(const std::vector<float>& vec1,  const std::vector<float>& vec2);
