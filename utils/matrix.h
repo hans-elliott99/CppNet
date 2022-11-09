@@ -7,6 +7,7 @@
 
 #pragma once
 
+
 template <typename T>
 class Matrix
 {
@@ -20,7 +21,8 @@ public:
 public:
     Matrix(size_t shape_i = 1, size_t shape_j = 1);
     ~Matrix();
-    
+
+    // Modify inplace    
     void fill(T value);
 
     void identity(T value = 1);
@@ -30,7 +32,8 @@ public:
     void add(const Matrix& B);
 
     void apply(std::function<T(T)> fun);
-
+    
+    // Print info
     void print(int nrow = -1);
 
     void shape();
@@ -56,3 +59,18 @@ Matrix<T> matmul(const Matrix<T>& A, const Matrix<T>& B);
 
 template <typename T>
 Matrix<T> addition(const Matrix<T>& A, const Matrix<T>& B);
+
+// template <typename T> 
+// Matrix<T*> viewT();
+template <typename T>
+Matrix<T> colApply(const Matrix<T>& A, T (*f)());
+// colApply(Matrix<T>& A, std::function<T(T)> fun);
+
+template <typename T> T vecSum(std::vector<T> vec);
+
+
+
+// https://stackoverflow.com/questions/8752837/undefined-reference-to-template-class-constructor
+template class Matrix<float>;
+template class Matrix<double>;
+template class Matrix<int>;

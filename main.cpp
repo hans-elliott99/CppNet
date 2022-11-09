@@ -4,7 +4,7 @@
 #include "utils/functions.h"
 #include "utils/matrix.h"
 #include "utils/matrix.cpp" //have to include this since the linker can't find Matrix<type> just from the header 
-                //https://stackoverflow.com/questions/1639797/template-issue-causes-linker-error-c
+                            //https://stackoverflow.com/questions/1639797/template-issue-causes-linker-error-c
 
 int main()
 {
@@ -19,13 +19,18 @@ int main()
     // Xtr.shape();
     // Ytr.shape();
 
-    // error - if using type other than float, linker gets lost when it s
-    // sees Dataset initializing a matrix of type float
-    Matrix<float> A(5, 5); A.randomize();
-    Matrix<float> B(5, 3); B.fill(-1.0);
+    Matrix<float> A(5, 5); A.randomize(-1, 1);
+    Matrix<float> B(3, 3); B.identity();
 
-    auto C = matmul(A, B);
-    // C.apply(sigmoid);
+    // auto C = matmul(A, B);
+    // C.apply(relu);
+    // C.print();
+    B.print();
+    std::cout << '\n';
 
-    C.print();
+    // problem passing fn to colapply...
+    // also accessing cols in vec of vec is slow compared to a flat vector...
+    auto D = colApply(B, vecSum<float>);
+    // B.apply(relu);
+    D.print();
 }
