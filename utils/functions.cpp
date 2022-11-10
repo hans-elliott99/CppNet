@@ -30,9 +30,10 @@ float relu_derivative(float x)
 }
 
 // Random Double Generator
-float random(float low, float high)
+template <typename T>
+T random(int low, int high)
 {
-    return low + static_cast<float>(rand()) / ( static_cast<float>(RAND_MAX / (high - low)) );
+    return low + static_cast<T>(rand()) / ( static_cast<T>(RAND_MAX / (high - low)) );
 }
 
 // Euclidean Distance

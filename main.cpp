@@ -1,9 +1,9 @@
 
 
-#include "data/dataset.h"
+// #include "data/dataset.h"
 #include "utils/functions.h"
-#include "utils/matrix.h"
-#include "utils/matrix.cpp" //have to include this since the linker can't find Matrix<type> just from the header 
+#include "matrix/matrix.h"
+#include "matrix/matrix.cpp" //have to include this since the linker can't find Matrix<type> just from the header 
                             //https://stackoverflow.com/questions/1639797/template-issue-causes-linker-error-c
 
 int main()
@@ -19,18 +19,28 @@ int main()
     // Xtr.shape();
     // Ytr.shape();
 
-    Matrix<float> A(5, 5); A.randomize(-1, 1);
-    Matrix<float> B(3, 3); B.identity();
+    // Matrix<float> A(5, 5); A.randomize(-1, 1);
+    // Matrix<float> B(3, 3); B.identity();
 
     // auto C = matmul(A, B);
     // C.apply(relu);
-    // C.print();
-    B.print();
-    std::cout << '\n';
+    // // C.print();
+    // B.print();
+    // std::cout << '\n';
 
     // problem passing fn to colapply...
     // also accessing cols in vec of vec is slow compared to a flat vector...
-    auto D = colApply(B, vecSum<float>);
+    // auto D = colApply(B, vecSum<float>);
     // B.apply(relu);
-    D.print();
+    // D.print();
+
+    Matrix<float> A(3, 3);
+    // Matrix<float> B(3,3); 
+    A.fill(2);
+    A.print();
+
+    std::cout<<'\n';
+    A.colApply(vecSum);
+    A.print();
+
 }
