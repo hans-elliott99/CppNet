@@ -66,7 +66,7 @@ Matrix<T>::operator()(size_t i, size_t j)
 {
     assert (i < _shape_i && "`i` index out of range.");
     assert (j < _shape_j && "`j` index out of range.");
-    return data[i*_shape_i + j]; 
+    return data[i*_shape_j + j]; 
 }
 
 template <typename T> T const& 
@@ -74,7 +74,7 @@ Matrix<T>::operator()(size_t i, size_t j) const
 {
     assert (i < _shape_i && "`i` index out of range.");
     assert (j < _shape_j && "`j` index out of range.");
-    return data[i*_shape_i + j]; 
+    return data[i*_shape_j + j]; 
 }
 
 
@@ -175,17 +175,32 @@ Matrix<T>::add(const Matrix<T>& B)
 {
     const size_t Brows = B.size(0);
     const size_t Bcols = B.size(1);
+    Matrix<T> _B;
 
-    assert (_shape_i == Brows); assert (_shape_j == Bcols);
+    if (Brows != _shape_i)
+    {
+        assert (Bcols == _shape_j && (Brows == 1 | Brows == 0) 
+                && "Dimensions do not match and could not be broadcasted.");
+        _B = B.broadcast(0, _shape_i);
+    }
+    else if (Bcols != _shape_j)
+    {
+        assert (Brows == _shape_i && (Bcols == 1 | Bcols == 0) 
+                && "Dimensions do not match and could not be broadcasted.");
+        _B = B.broadcast(1, _shape_j);
+    } 
+    else
+        { _B = B; }
 
     // Modify the matrix's data inplace
     std::transform(
         data.begin(), data.end(),
-        B.data.begin(),
+        _B.data.begin(),
         data.begin(),
         std::plus<T>()
     );
 }
+
 
 template <typename T> void 
 Matrix<T>::fill(T value)
@@ -198,7 +213,7 @@ Matrix<T>::diagonal(T value)
 {
     assert (_shape_i == _shape_j); //n x n only
     for (size_t i {0}; i < _shape_i; i++)
-        data[i*_shape_i + i] = value;
+        data[i*_shape_j + i] = value;
 }
 
 template <typename T> void 
@@ -207,9 +222,33 @@ Matrix<T>::randomize(int low, int high)
     for (size_t i {0}; i < _shape_i; i++)
         for (size_t j {0}; j < _shape_j; j++)
         {
-            data[i*_shape_i + j] = random<T>(low, high);
+            data[i*_shape_j + j] = matrix::random<T>(low, high);
         }
 }
+
+template <typename T> void 
+Matrix<T>::transpose()
+{
+    //https://stackoverflow.com/questions/9227747/in-place-transposition-of-a-matrix
+    std::vector<T> result;
+    result.reserve(_shape_i*_shape_j);
+
+    #pragma omp parallel for
+    for(size_t n {0}; n < _shape_i*_shape_j; n++)
+    {
+        size_t i = n / _shape_i;
+        size_t j = n % _shape_i;
+        result.push_back(data[j*_shape_j + i]);
+    }
+
+    data = result;
+    std::swap(_shape_i, _shape_j);
+}
+
+
+
+
+
 
 /**
  * APPLY
@@ -248,6 +287,52 @@ Matrix<T>::colApply(T (*fun)(std::vector<T>&))
 }
 
 /**
+ * Broadcasting
+*/
+template <typename T> Matrix<T> 
+Matrix<T>::broadcast(size_t dim, size_t length) const
+{
+    size_t matsize;     //size of the 1d matrix (ie, length of the row or col vector)
+    size_t si, sj;      //the i and j sizes/shapes for the output matrix
+    std::vector<T> mat; //the new vector to hold the broadcasted data  
+
+    if (dim == 0) 
+    {
+        assert ((this->size(0)==1 | this->size(0)==0) 
+                    && "The size of the brodacast dimension must be 1 or 0.");
+        // For broadcasting along the i dimension, repeat the entire
+        // vector length times in the j direction. 
+        matsize = this->size(1); //(number of cols in the col vector)
+        si = length;
+        sj = _shape_j;
+
+        for (size_t i = 0; i < length; i++)
+            mat.insert(mat.end(), std::begin(data), std::end(data));
+    }
+    else
+    {
+        assert ((this->size(1)==1 | this->size(1)==0) 
+            && "The size of the brodacast dimension must be 1 or 0.");
+
+        // For broadcasting along the j dimension, simply repeat the 
+        // element in each i position length times in the j direction.
+        matsize = this->size(0); //(number of rows in the row vector)
+        si = _shape_i;
+        sj = length;
+
+        for (size_t i {0}; i < matsize; i++)
+            mat.insert(mat.end(), length, data[i]);
+    } 
+
+    Matrix<T> Out(si, sj);
+    Out.data = mat;
+    return Out;
+}
+
+
+
+
+/**
  * Utilities
 */
 template <typename T> void 
@@ -259,7 +344,7 @@ Matrix<T>::print(int nrow)
     for (size_t i {0}; i < nrow; i++)
     {
         for (size_t j {0}; j < _shape_j; j++)
-            {std::cout << data[i*_shape_i + j] << " \t";}
+            {std::cout << data[i*_shape_j + j] << " \t";}
         std::cout<<'\n';
     }
 }
@@ -272,64 +357,80 @@ Matrix<T>::shape()
 
 
 
+/**
+ * Namespace functions
+*/
 
-// // Functions
-// template <typename T> Matrix<T> 
-// matmul(const Matrix<T>& A, const Matrix<T>& B)
-// {
-//     const size_t Arows = A.data.size();
-//     const size_t Acols = A.data[0].size();
-//     const size_t Brows = B.data.size();
-//     const size_t Bcols = B.data[0].size();
-//     assert (Acols == Brows);
+template <typename T> Matrix<T> 
+matrix::matmul(Matrix<T>& A, Matrix<T>& B)
+{
+    // https://stackoverflow.com/questions/16737298/what-is-the-fastest-way-to-transpose-a-matrix-in-c
+    const size_t Arows = A.size(0); const size_t Acols = A.size(1);
+    const size_t Brows = B.size(0); const size_t Bcols = B.size(1);
+    assert (Acols == Brows);
 
-//     Matrix<T> output(Arows, Bcols);
-//     std::vector<T> row;
-//     T product;
+    Matrix<T> Out(Arows, Bcols);
 
-//     for (size_t i {0}; i < Arows; i++) //rows in a
-//     {
-//         for (size_t j {0}; j < Bcols; j++) //cols in b
-//         {
-//             product = 0;
-//             for (size_t v {0}; v < Acols; v++) //elements in each row
-//                 { product += A.data[i][v] * B.data[v][j]; }
-            
-//             row.push_back(product);
-//         }        
-//         output.data[i] = {row};
-//         row.clear();
-//     }
+    B = transpose(B);
+    for (size_t i {0}; i < Arows; i++) //rows in a
+    {
+        for (size_t j {0}; j < Bcols; j++) //cols in b
+        {
+            T product = 0;
+            for (size_t v {0}; v < Acols; v++) //elements in each row
+                { product += A.data[i*Acols + v] * B.data[j*Brows + v]; }            
+               
+        Out.data[i*Bcols + j] = product;
+        }
+    }
+    B = transpose(B);
 
-//     return output;
-// }
+    return Out;
+}
 
-// template <typename T> Matrix<T> 
-// addition(const Matrix<T>& A, const Matrix<T>& B)
-// {
-//     const size_t Arows = A.data.size();
-//     const size_t Acols = A.data[0].size();
-//     const size_t Brows = B.data.size();
-//     const size_t Bcols = B.data[0].size();
+template <typename T> Matrix<T> 
+matrix::matsum(const Matrix<T>& A, const Matrix<T>& B)
+{
+    assert (A.size(0) == B.size(0)); assert (A.size(1) == B.size(1));
 
-//     assert (Arows == Brows); assert (Acols == Bcols);
-
-//     Matrix output(Arows, Acols);
-//     for (size_t i {0}; i < Arows; i++)
-//     {
-//         std::transform(A.data[i].begin(), A.data[i].end(), B.data[i].begin(),
-//                        output.data[i].begin(),
-//                        std::plus<T>()
-//                        );
-//     }
-//     return output;
-// }
+    Matrix<T> Out(A.size(0), A.size(1));
+    for (size_t i {0}; i < A.size(0); i++)
+    {
+        std::transform(
+            A.data.begin(), A.data.end(), 
+            B.data.begin(),
+            Out.data.begin(),
+            std::plus<T>()
+        );
+    }
+    return Out;
+}
 
 
+
+template <typename T> Matrix<T> 
+matrix::transpose(Matrix<T>& A)
+{
+    size_t Arows = A.size(0); 
+    size_t Acols = A.size(1);
+    Matrix<T> Out(Acols, Arows);
+
+    // std::vector<T> result;
+    // result.reserve(_shape_i*_shape_j);
+
+    #pragma omp parallel for
+    for(size_t n {0}; n < Arows*Acols; n++)
+    {
+        size_t i = n / Arows;
+        size_t j = n % Arows;
+        Out.data[n] = A.data[j*Acols + i];
+    }
+    return Out;
+}
 
 
 template <typename T>
-T vecSum(std::vector<T> &vec)
+T matrix::vecSum(std::vector<T> &vec)
 {
     T sum = 0;
     for (auto& n : vec)
@@ -339,7 +440,7 @@ T vecSum(std::vector<T> &vec)
 
 
 template <typename T>
-T random(int low, int high)
+T matrix::random(int low, int high)
 {
     return low + static_cast<T>(rand()) / ( static_cast<T>(RAND_MAX / (high - low)) );
 }

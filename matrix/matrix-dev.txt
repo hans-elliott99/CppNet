@@ -1,0 +1,109 @@
+
+template <typename T> void
+Matrix<T>::_getCofactor(std::vector<T>& cofactors, size_t p, size_t q, size_t n)
+{
+    std::vector<T> result(_shape_i*_shape_j);
+    size_t i = 0, j = 0;
+
+    for (size_t row = 0; row < n; row++)
+    {
+        for (size_t col = 0; col < n; col++)
+        {
+            // Cofactor Expansion
+            if (row != p && col != q)
+            {
+                cofactors.push_back(data[row * _shape_j + col]);
+                j++;
+
+                if (j == n-1)
+                {   //row is filled so move to next row and reset cols
+                    j = 0;
+                    i++;
+                }
+            }
+        }
+    }
+}
+
+template <typename T> T
+Matrix<T>::_determinant(std::vector<T> matrix,  size_t n)
+{
+    T Det = 0;
+
+    if (n == 1)
+        return this->data[0];
+
+    // vector to store matrix of cofactors
+    std::vector<T> cofactors;
+    cofactors.reserve(_shape_i*_shape_i);
+
+    int sign = 1; //sign switches between + & - at each position
+
+    // For each element of first row
+    for (size_t f = 0; f < n; f++)
+    {
+        // Get cofactor of data[0, f] to update cofactors and recursively expand.
+        _getCofactor(cofactors, 0, f, n);
+        Det += sign * this->data[f] * _determinant(cofactors, n - 1);
+        sign = -sign;
+    }
+    return Det;
+}
+
+template <typename T> std::vector<T>
+Matrix<T>::_adjoint()
+{
+    std::vector<T> adj;
+    adj.reserve(_shape_i*_shape_i);
+
+    if (_shape_i == 1)
+    {
+        adj[0] = 1;
+        return adj;
+    }
+    
+    // vector to store matrix of cofactors
+    std::vector<T> cofactors;
+    cofactors.reserve(_shape_i*_shape_i);
+    
+    int sign = 1;
+
+    for (size_t i = 0; i < _shape_i; i++)
+    {
+        for (size_t j = 0; j < _shape_i; j ++)
+        {
+            // Get cofactor of data[i, j]
+            _getCofactor(cofactors, i, j, _shape_i);
+
+            //sign of the adjoint is positive if i+j is even
+            sign = ((i + j) % 2 == 0) ? 1 : -1;
+
+            adj[j*_shape_j + i] = (sign) * (_determinant(cofactors, _shape_i-1));
+        }
+    }
+    return adj;
+}
+
+template <typename T> void 
+Matrix<T>::invert()
+{
+    // std::vector<T> inverse;
+    // inverse.reserve(_shape_i*_shape_i);
+
+    // Find determinant of this matrix (data)
+    T det = _determinant(this->data, _shape_i);
+    assert (det != 0 && "Determinant is 0, cannot compute inverse.");
+    std::cout << "Determinant: " << det << '\n';
+
+    // Find adjoint of this matrix
+    std::vector<T> adj = _adjoint();
+    for (auto e: adj) std::cout << e << ' ';
+
+    // Get inverse from adjoint / determinant
+    data.clear(); data.reserve(_shape_i*_shape_i);
+    std::transform(
+        adj.begin(), adj.end(),
+        data.begin(),
+        [&](T& adj_n) {return adj_n / det; }
+    );
+}

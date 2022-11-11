@@ -34,13 +34,18 @@ int main()
     // B.apply(relu);
     // D.print();
 
-    Matrix<float> A(3, 3);
-    // Matrix<float> B(3,3); 
-    A.fill(2);
-    A.print();
+    Matrix<float> A(1, 3);
+    Matrix<float> B(3, 3); 
+    
+    // A(0,0) = 1; A(0,1) = 2; A(0,2) = 3;
+    // A(0,0) = 1; A(1,0) = 2; A(2,0) = 3;
+    // A.print();
+    B(0,0) = 1; B(0,1) = 2; B(0,2) = 3;
+    B(1,0) = 4; B(1,1) = 5; B(1,2) = 7;
+    B(2,0) = 7; B(2,1) = 8; B(2,2) = 9;
+    B.print();
 
-    std::cout<<'\n';
-    A.colApply(vecSum);
-    A.print();
+
+    std::cout <<'\n';    
 
 }

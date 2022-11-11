@@ -6,17 +6,20 @@
 
 #pragma once
 
-
+// Row-major ordering
+// Element [i,j] is at (i * _shape_j + j)
 template <typename T>
 class Matrix
 {
 private:
     size_t _shape_i = 0;
     size_t _shape_j = 0;
+
     std::vector<T> _stridedSlice( int start, int length, int stride ) const;
     
 public:
     typedef T value_type;
+    
     std::vector<T> data;
 
 public:
@@ -25,6 +28,7 @@ public:
     ~Matrix() {};
 
     size_t nelements() {return data.size(); }
+    
     size_t index(size_t i, size_t j ) const { return i * _shape_j + j; }
 
     // Modify inplace    
@@ -38,18 +42,26 @@ public:
 
     void apply(std::function<T(T)> fun);
 
-    // void colApply(std::function<T(std::vector<T>)> fun);
     void colApply(T (*fun)(std::vector<T>&));
-    
+
+    void rowApply(T (*fun)(std::vector<T>&));
+
+    void transpose();
+
+    // Access elements
+    std::vector<T> Row( int row, int colBegin = 0, int colEnd = -1 ) const;
+
+    std::vector<T> Column( int col, int rowBegin = 0, int rowEnd = -1 ) const;
+    //// Matrix<T> copyslice(int rowBegin = 0, int colBegin = 0, int rowEnd = -1,  int colEnd = -1) const;
+
+    // Broadcasting
+    Matrix<T> broadcast(size_t dim, size_t length) const;
+ 
     // Print info
     void print(int nrow = -1);
 
     void shape();
 
-    // Access elements
-    std::vector<T> Row( int row, int colBegin = 0, int colEnd = -1 ) const;
-    std::vector<T> Column( int col, int rowBegin = 0, int rowEnd = -1 ) const;
-    // Matrix<T> copy(int rowBegin = 0, int colBegin = 0, int rowEnd = -1,  int colEnd = -1) const;
 
 public:
     //operators
@@ -68,16 +80,18 @@ public:
     size_t size(size_t axis = 0) const;
 };
 
+namespace matrix
+{
+    template <typename T> Matrix<T> matmul(const Matrix<T>& A, const Matrix<T>& B);
 
-template <typename T> Matrix<T> matmul(const Matrix<T>& A, const Matrix<T>& B);
+    template <typename T> Matrix<T> matsum(const Matrix<T>& A, const Matrix<T>& B);
 
-template <typename T> Matrix<T> addition(const Matrix<T>& A, const Matrix<T>& B);
+    template <typename T> Matrix<T> transpose(Matrix<T>& A);
 
-template <typename T> T random(int low, int high);
+    template <typename T> T random(int low, int high);
 
-template <typename T> T vecSum(std::vector<T> &vec);
-
-
+    template <typename T> T vecSum(std::vector<T> &vec);
+}
 
 // https://stackoverflow.com/questions/8752837/undefined-reference-to-template-class-constructor
 template class Matrix<float>;
