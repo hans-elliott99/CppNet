@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <vector>
 #include <iostream>
-#include "../utils/functions.hpp"
+#include "../net/functions.hpp"
 #include "../matrix/matrix.hpp"
 
 #pragma once

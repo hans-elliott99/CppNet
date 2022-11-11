@@ -121,6 +121,21 @@ Matrix<T>::Column(int col, int rowBegin, int rowEnd) const
         return _stridedSlice(index(rowBegin, col), rowBegin-rowEnd+1, -_shape_j);
 }
 
+template <typename T> std::vector<size_t>
+Matrix<T>::whichTrue(bool (*fun)(T)) const
+{
+    std::vector<size_t> indices;
+    // Where the function evaluates to true, store the index
+    for (size_t n = 0; n <_shape_i*_shape_j; n++)
+    {
+        if ((*fun)(this->data[n]) == true)
+        {
+            indices.push_back(n);
+        }
+    }
+    return indices;
+}
+
 // template <typename T> Matrix<T>
 // Matrix<T>::copy() const
 // {

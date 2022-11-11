@@ -1,10 +1,8 @@
 
 #include "net/layer.hpp"
+#include "net/functions.hpp"
 #include "data/dataset.hpp"
-#include "utils/functions.hpp"
-#include "matrix/matrix.tpp"
-// #include "matrix/matrix.cpp" //have to include this since the linker can't find Matrix<type> just from the header 
-                            //https://stackoverflow.com/questions/1639797/template-issue-causes-linker-error-c
+#include "matrix/matrix.hpp"
 
 
 int main()
@@ -19,37 +17,50 @@ int main()
     auto Ytr = data.toMatrix(DataSplit::TRAIN, true);
     auto Xdev = data.toMatrix(DataSplit::TEST);
     auto Ydev = data.toMatrix(DataSplit::TEST, true);
-    Xdev.shape();
 
     // MLP
-    size_t neurons = 5;
-    Matrix<float> fake_grad(Xdev.size(), neurons);
+    size_t neurons1 = 5;
+    size_t out_neurons = 2;
+    // fake gradient coming from nonexistant loss fn 
+    Matrix<float> fake_grad(Xdev.size(), out_neurons);
     fake_grad.randomize(0.001, 0.01);
 
-    Linear l1(Xdev.size(1), neurons);
+    // Structure
+    ReLU l1(Xdev.size(1), neurons1);
+    Linear l2(neurons1, out_neurons); 
     
+    // Forward
+    auto l1_out = l1.forward(Xdev);
+    auto l2_out = l2.forward(l1_out);
 
-    auto output = l1.forward(Xdev);
-    auto l1back = l1.backward(Xdev, fake_grad);
-    l1back.shape();
+    // Backward
+    /*pretend loss --> fake_grad*/
+    auto l2_back = l2.backward(l1_out, fake_grad);
+    auto l1_back = l1.backward(Xdev, l2_back);
 
-    l1.Wgrad.print();
+
+    l2.Wgrad.print();
     std::cout << '\n';
-    l1.Bgrad.print();
+    
+    l2.Bgrad.print();
+    std::cout << '\n';
+
 }
+
+
+
+
 
 
 // int main()
 // {
+//     auto is_above_zero = [](float e) {return (e > 0); };
+
 //     Matrix<float> A(5,5); A.fill(1);
 //     Matrix<float> B(5,5); B.diagonal(2);
-//     B(0,0) = 1; B(0,1) = 1; B(1,0) = 3;
-
-//     A.print();
-//     auto C = matrix::matmul(A, B);
-//     std::cout << '\n';
-//     C.print();
-
-//     std::cout << '\n';
+//     // B(0,0) = 1; B(0,1) = 1; B(1,0) = 3;
+//     auto out = B.whichTrue(is_above_zero);
+    
+//     for (auto e : out) std::cout << e <<' ';
 //     B.print();
 // }

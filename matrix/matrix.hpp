@@ -34,6 +34,8 @@ public:
     
     size_t index(size_t i, size_t j ) const { return i * _shape_j + j; }
 
+    std::vector<size_t> whichTrue(bool (*fun)(T)) const;
+
     // Modify inplace    
     ////implement chaining https://blog.stratifylabs.dev/device/2020-12-15-Method-Chaining-in-Cpp/#:~:text=Method%20chaining%20in%20C%2B%2B%20is,another%20method%20can%20be%20called.
     void fill(T value);
@@ -93,8 +95,7 @@ namespace matrix
 
     template <typename T> Matrix<T> transpose(const Matrix<T>& A);
 
-    template <typename T> 
-    T random(double low, double high);
+    template <typename T> T random(double low, double high);
 
     template <typename T> T vecSum(std::vector<T> &vec);
 }
