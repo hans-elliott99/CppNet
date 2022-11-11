@@ -217,7 +217,7 @@ Matrix<T>::diagonal(T value)
 }
 
 template <typename T> void 
-Matrix<T>::randomize(int low, int high)
+Matrix<T>::randomize(double low, double high)
 {
     for (size_t i {0}; i < _shape_i; i++)
         for (size_t j {0}; j < _shape_j; j++)
@@ -440,7 +440,7 @@ T matrix::vecSum(std::vector<T> &vec)
 
 
 template <typename T>
-T matrix::random(int low, int high)
+T matrix::random(double low, double high)
 {
     return low + static_cast<T>(rand()) / ( static_cast<T>(RAND_MAX / (high - low)) );
 }
