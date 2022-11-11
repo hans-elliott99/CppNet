@@ -2,9 +2,9 @@
 #include <vector>
 #include <unordered_map>
 #include <cmath>
-#include "../matrix/matrix.h"
-#include "../matrix/matrix.cpp"
-#include "../utils/functions.h"
+#include "../matrix/matrix.hpp"
+#include "../matrix/matrix.tpp"
+#include "../utils/functions.hpp"
 
 #pragma once
 // namespace nn

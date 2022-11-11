@@ -1,4 +1,4 @@
-#include "layer.h"
+#include "layer.hpp"
 
 #define FIXED_DOUBL(x) std::fixed << std::setprecision(6) << (x)
 

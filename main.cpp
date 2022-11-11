@@ -1,8 +1,8 @@
 
-#include "net/layer.h"
-#include "data/dataset.h"
-#include "utils/functions.h"
-#include "matrix/matrix.h"
+#include "net/layer.hpp"
+#include "data/dataset.hpp"
+#include "utils/functions.hpp"
+#include "matrix/matrix.tpp"
 // #include "matrix/matrix.cpp" //have to include this since the linker can't find Matrix<type> just from the header 
                             //https://stackoverflow.com/questions/1639797/template-issue-causes-linker-error-c
 

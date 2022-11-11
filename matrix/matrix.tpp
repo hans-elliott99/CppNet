@@ -1,6 +1,5 @@
 
-
-#include "matrix.h"
+#include "matrix.hpp"
 
 // Default constructor
 template <typename T>

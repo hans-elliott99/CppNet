@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <vector>
 #include <iostream>
-#include "../utils/functions.h"
-#include "../matrix/matrix.h"
+#include "../utils/functions.hpp"
+#include "../matrix/matrix.hpp"
 
 #pragma once
 
