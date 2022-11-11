@@ -1,8 +1,4 @@
 
-#include <iostream>
-#include <vector>
-#include <assert.h>
-#include <algorithm>
 
 #include "matrix.h"
 
@@ -207,6 +203,11 @@ Matrix<T>::fill(T value)
 {
     data = std::vector<T>(_shape_i*_shape_j, value);
 }
+template <typename T> void 
+Matrix<T>::zero()
+{
+    this->fill(0);
+}
 
 template <typename T> void 
 Matrix<T>::diagonal(T value)
@@ -219,11 +220,10 @@ Matrix<T>::diagonal(T value)
 template <typename T> void 
 Matrix<T>::randomize(double low, double high)
 {
-    for (size_t i {0}; i < _shape_i; i++)
-        for (size_t j {0}; j < _shape_j; j++)
-        {
-            data[i*_shape_j + j] = matrix::random<T>(low, high);
-        }
+    for (size_t n = 0; n < _shape_i*_shape_j; n++)
+    {
+        data[n] = matrix::random<T>(low, high);
+    }
 }
 
 template <typename T> void 
@@ -344,7 +344,7 @@ Matrix<T>::print(int nrow)
     for (size_t i {0}; i < nrow; i++)
     {
         for (size_t j {0}; j < _shape_j; j++)
-            {std::cout << data[i*_shape_j + j] << " \t";}
+            {std::cout << FIXED_PRECIS(data[i*_shape_j + j]) << " \t"; }
         std::cout<<'\n';
     }
 }
@@ -362,28 +362,26 @@ Matrix<T>::shape()
 */
 
 template <typename T> Matrix<T> 
-matrix::matmul(Matrix<T>& A, Matrix<T>& B)
+matrix::matmul(const Matrix<T>& A, const Matrix<T>& B)
 {
-    // https://stackoverflow.com/questions/16737298/what-is-the-fastest-way-to-transpose-a-matrix-in-c
     const size_t Arows = A.size(0); const size_t Acols = A.size(1);
     const size_t Brows = B.size(0); const size_t Bcols = B.size(1);
     assert (Acols == Brows);
 
     Matrix<T> Out(Arows, Bcols);
-
-    B = transpose(B);
+    // https://stackoverflow.com/questions/16737298/what-is-the-fastest-way-to-transpose-a-matrix-in-c
+    Matrix<T> Bt = transpose(B);
     for (size_t i {0}; i < Arows; i++) //rows in a
     {
         for (size_t j {0}; j < Bcols; j++) //cols in b
         {
             T product = 0;
             for (size_t v {0}; v < Acols; v++) //elements in each row
-                { product += A.data[i*Acols + v] * B.data[j*Brows + v]; }            
+                { product += A.data[i*Acols + v] * Bt.data[j*Brows + v]; }            
                
         Out.data[i*Bcols + j] = product;
         }
     }
-    B = transpose(B);
 
     return Out;
 }
@@ -409,14 +407,11 @@ matrix::matsum(const Matrix<T>& A, const Matrix<T>& B)
 
 
 template <typename T> Matrix<T> 
-matrix::transpose(Matrix<T>& A)
+matrix::transpose(const Matrix<T>& A)
 {
     size_t Arows = A.size(0); 
     size_t Acols = A.size(1);
     Matrix<T> Out(Acols, Arows);
-
-    // std::vector<T> result;
-    // result.reserve(_shape_i*_shape_j);
 
     #pragma omp parallel for
     for(size_t n {0}; n < Arows*Acols; n++)

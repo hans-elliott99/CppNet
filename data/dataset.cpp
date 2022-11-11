@@ -1,7 +1,4 @@
 #include "dataset.h"
-#include "../utils/functions.h"
-#include "../utils/matrix.h"
-
 
 Dataset::Dataset(std::string filename)
 {
@@ -35,7 +32,7 @@ void Dataset::make_split(double ptrain)
 {
     for (size_t i {0}; i < _X.size(); i++)
     {
-        if (random(0, 1) < ptrain) //functions.h
+        if (random<double>(0, 1) < ptrain) //functions.h
         {
             // Sample goes to training split
             _Xtrain.push_back(&_X[i]) ;
@@ -74,7 +71,8 @@ Matrix<float> Dataset::toMatrix(DataSplit s, bool label)
     for (size_t i {0}; i < rows; i++)
         for (size_t j {0}; j < cols; j++)
         {
-            mat.data[i][j] = (*_d[i])[j];
+            // mat.data[i*cols + j] = (*_d[i])[j];
+            mat(i,j) = (*_d[i])[j];
         }
     
     return mat;

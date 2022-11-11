@@ -4,7 +4,7 @@
 #include <vector>
 #include <iostream>
 #include "../utils/functions.h"
-#include "../utils/matrix.h"
+#include "../matrix/matrix.h"
 
 #pragma once
 

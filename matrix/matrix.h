@@ -1,10 +1,13 @@
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <assert.h>
 #include <functional>
-
+#include <algorithm>
 
 #pragma once
+
+#define FIXED_PRECIS(x) std::fixed <<std::setprecision(3)<<(x)
 
 // Row-major ordering
 // Element [i,j] is at (i * _shape_j + j)
@@ -34,7 +37,8 @@ public:
     // Modify inplace    
     ////implement chaining https://blog.stratifylabs.dev/device/2020-12-15-Method-Chaining-in-Cpp/#:~:text=Method%20chaining%20in%20C%2B%2B%20is,another%20method%20can%20be%20called.
     void fill(T value);
-
+    void zero();
+    
     void diagonal(T value = 1);
 
     void randomize(double low = 0, double high = 1);
@@ -87,9 +91,10 @@ namespace matrix
 
     template <typename T> Matrix<T> matsum(const Matrix<T>& A, const Matrix<T>& B);
 
-    template <typename T> Matrix<T> transpose(Matrix<T>& A);
+    template <typename T> Matrix<T> transpose(const Matrix<T>& A);
 
-    template <typename T> T random(double low, double high);
+    template <typename T> 
+    T random(double low, double high);
 
     template <typename T> T vecSum(std::vector<T> &vec);
 }
