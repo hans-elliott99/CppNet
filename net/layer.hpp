@@ -9,7 +9,10 @@
 #pragma once
 
 #define FIXED_DOUBL(x) std::fixed << std::setprecision(6) << (x)
+
+
 // namespace nn
+// refactor so linear is like a base class?
 
 class Linear
 {   
