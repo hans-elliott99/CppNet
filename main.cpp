@@ -39,6 +39,8 @@ int main()
     auto l1_back = l1.backward(Xdev, l2_back);
 
 
+
+
     l2.Wgrad.print();
     std::cout << '\n';
     
@@ -49,18 +51,15 @@ int main()
 
 
 
-
+// TODO : finish sigmoid
 
 
 // int main()
 // {
-//     auto is_above_zero = [](float e) {return (e > 0); };
 
-//     Matrix<float> A(5,5); A.fill(1);
+//     Matrix<float> A(5,5); A.fill(3);
 //     Matrix<float> B(5,5); B.diagonal(2);
 //     // B(0,0) = 1; B(0,1) = 1; B(1,0) = 3;
-//     auto out = B.whichTrue(is_above_zero);
-    
-//     for (auto e : out) std::cout << e <<' ';
-//     B.print();
+//     auto out = 2.0f + A;
+//     out.print();
 // }

@@ -12,49 +12,6 @@ Matrix<T>::Matrix(size_t shape_i, size_t shape_j):
 /**
  * OPERATORS
 */
-template <typename T> Matrix<T> 
-Matrix<T>::operator+(const T& scalar)
-{
-    Matrix output(_shape_i, _shape_j);
-
-    for (size_t i {0}; i < _shape_i; i++)
-    {
-        std::transform(
-            data.begin(), data.end(),
-            output.data.begin(),
-            std::bind(std::plus<T>(), std::placeholders::_1, scalar)
-        );
-    }
-    return output;
-}
-
-template <typename T> Matrix<T>
-Matrix<T>::operator-(const T& scalar)
-{
-    return operator+(-scalar);
-}
-
-template <typename T> Matrix<T> 
-Matrix<T>::operator*(const T& scalar)
-{
-    Matrix output(_shape_i, _shape_j);
-
-    for (size_t i {0}; i < _shape_i; i++)
-    {
-        std::transform(
-            data.begin(), data.end(),
-            output.data.begin(),
-            std::bind(std::multiplies<T>(), std::placeholders::_1, scalar)
-        );
-    }
-    return output;
-}
-
-template <typename T> Matrix<T>
-Matrix<T>::operator/(const T& scalar)
-{
-    return operator*(1 / scalar);
-}
 
 template <typename T> T& 
 Matrix<T>::operator()(size_t i, size_t j)
@@ -210,6 +167,38 @@ Matrix<T>::add(const Matrix<T>& B)
         std::plus<T>()
     );
 }
+
+template <typename T> void 
+Matrix<T>::mul(const Matrix<T>& B)
+{
+    const size_t Brows = B.size(0);
+    const size_t Bcols = B.size(1);
+    Matrix<T> _B;
+
+    if (Brows != _shape_i)
+    {
+        assert (Bcols == _shape_j && (Brows == 1 | Brows == 0) 
+                && "Dimensions do not match and could not be broadcasted.");
+        _B = B.broadcast(0, _shape_i);
+    }
+    else if (Bcols != _shape_j)
+    {
+        assert (Brows == _shape_i && (Bcols == 1 | Bcols == 0) 
+                && "Dimensions do not match and could not be broadcasted.");
+        _B = B.broadcast(1, _shape_j);
+    } 
+    else
+        { _B = B; }
+
+    // Modify the matrix's data inplace
+    std::transform(
+        data.begin(), data.end(),
+        _B.data.begin(),
+        data.begin(),
+        std::multiplies<T>()
+    );
+}
+
 
 
 template <typename T> void 

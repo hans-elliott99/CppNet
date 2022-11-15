@@ -30,7 +30,7 @@ public:
     Matrix(size_t shape_i = 0, size_t shape_j = 0);
     ~Matrix() {};
 
-    size_t nelements() {return data.size(); }
+    size_t nelements() const {return _shape_i*_shape_j; }
     
     size_t index(size_t i, size_t j ) const { return i * _shape_j + j; }
 
@@ -46,6 +46,7 @@ public:
     void randomize(double low = 0, double high = 1);
 
     void add(const Matrix& B);
+    void mul(const Matrix& B);
 
     void apply(std::function<T(T)> fun);
 
@@ -68,23 +69,18 @@ public:
     void print(int nrow = -1);
 
     void shape();
-
+    
+    //vector methods
+    size_t size(size_t axis = 0) const;
 
 public:
-    //operators
-    Matrix operator+(const T& scalar);
-    Matrix operator-(const T& scalar);
-    Matrix operator*(const T& scalar);
-    Matrix operator/(const T& scalar);
+
     T& operator()(size_t i, size_t j);
     T const& operator()(size_t i, size_t j) const;
     std::vector<T> operator[](size_t i);
 
     template <typename Y>
     friend std::ostream& operator<<(std::ostream& stream, Matrix<Y>& matrix);
-
-    //vector methods
-    size_t size(size_t axis = 0) const;
 };
 
 namespace matrix
@@ -104,3 +100,83 @@ namespace matrix
 template class Matrix<float>;
 template class Matrix<double>;
 template class Matrix<int>;
+
+
+
+// Overload Operators
+
+// A + s
+template <typename T> Matrix<T> 
+operator+(const Matrix<T>& A, T scalar)
+{
+    Matrix<T> output(A.size(0), A.size(1));
+
+    std::transform(
+        A.data.begin(), A.data.end(),
+        output.data.begin(),
+        std::bind(std::plus<T>(), std::placeholders::_1, scalar)
+    );
+    return output;
+}
+
+// s + A
+template <typename T> Matrix<T> 
+operator+(T scalar, const Matrix<T>& A)
+{ return A + scalar; }
+
+// A - s
+template <typename T> Matrix<T>
+operator-(const Matrix<T>& A, T scalar)
+{ return A + (-scalar); }
+
+// s - A
+template <typename T> Matrix<T>
+operator-(T scalar, const Matrix<T>& A)
+{
+    Matrix<T> output(A.size(0), A.size(1));
+
+    std::transform(
+        A.data.begin(), A.data.end(),
+        output.data.begin(),
+        std::bind(std::minus<T>(), scalar, std::placeholders::_1)
+    );
+    return output;
+}
+
+// A * s
+template <typename T> Matrix<T>
+operator*(const Matrix<T>& A, T scalar)
+{
+    Matrix<T> output(A.size(0), A.size(1));
+
+    std::transform(
+        A.data.begin(), A.data.end(),
+        output.data.begin(),
+        std::bind(std::multiplies<T>(), std::placeholders::_1, scalar)
+    );
+    return output;
+}
+
+// s * A
+template <typename T> Matrix<T>
+operator*(T scalar, const Matrix<T>& A)
+{return A * scalar; }
+
+// A divide s
+template <typename T> Matrix<T>
+operator/(const Matrix<T>& A, T scalar)
+{return A * (1 / scalar); }
+
+// s divide A
+template <typename T> Matrix<T>
+operator/(T scalar, const Matrix<T>& A)
+{
+    Matrix<T> output(A.size(0), A.size(1));
+
+    std::transform(
+        A.data.begin(), A.data.end(),
+        output.data.begin(),
+        std::bind(std::divides<T>(), scalar, std::placeholders::_1) // check (does scalar get divided by element?)
+    );
+    return output;
+}
