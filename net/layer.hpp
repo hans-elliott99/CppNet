@@ -12,9 +12,7 @@
 
 
 // namespace nn
-// refactor so linear is like a base class?
-
-class Linear
+class Layer
 {   
 public:
     Matrix<float> weight;
@@ -24,28 +22,51 @@ public:
     bool use_bias = true;
 
 public:
+    Layer(size_t n_in, size_t n_out, bool use_bias = true);
+
+    virtual Matrix<float> forward(const Matrix<float>& X) = 0;
+    virtual Matrix<float> backward(const Matrix<float>& X, const Matrix<float>& grad_flow) = 0;
+
+protected:
+    Matrix<float> _layer_forward(const Matrix<float>& X);
+    Matrix<float> _layer_backward(const Matrix<float>& X, const Matrix<float>& grad_flow);
+};
+
+
+
+class Linear : public Layer
+{
+public:
     Linear(size_t n_in, size_t n_out, bool use_bias = true);
-    ~Linear() {};
+
+
+    Matrix<float> forward(const Matrix<float>& X);
+    Matrix<float> backward(const Matrix<float>& X, const Matrix<float>& grad_flow);
+};
+
+
+
+class ReLU : public Layer
+{   
+private:
+    Matrix<float> _activ_inputs; //save for calculating derivative.
+
+public:
+    ReLU(size_t n_in, size_t n_out, bool use_bias = true);
 
     Matrix<float> forward(const Matrix<float>& X);
     Matrix<float> backward(const Matrix<float>& X, const Matrix<float>& grad_flow);
 
 };
 
-class ReLU
-{   
-public:
-    Matrix<float> weight;
-    Matrix<float> bias;
-    Matrix<float> Wgrad;
-    Matrix<float> Bgrad;
-    Matrix<float> relu_inputs; //save for calculating derivative.
 
-    bool use_bias = true;
+class Sigmoid : public Layer
+{
+public:
+    Matrix<float> _activ_outputs;
 
 public:
-    ReLU(size_t n_in, size_t n_out, bool use_bias = true);
-    ~ReLU() {};
+    Sigmoid(size_t n_in, size_t n_out, bool use_bias = true);
 
     Matrix<float> forward(const Matrix<float>& X);
     Matrix<float> backward(const Matrix<float>& X, const Matrix<float>& grad_flow);
