@@ -21,12 +21,14 @@ BinaryCrossEntropy::_forward(const Matrix<float>& y_pred, const Matrix<float>& y
     y_pred_clipped = clipped_preds; //keeping clipped preds untouched
 
     // Sample-wise loss
-    //-(y_true * log(y_pred)) + ((1-y_true)*log(1-y_pred))
+    //-( y_true * log(y_pred)) + (1-y_true)*log(1-y_pred) )
     Matrix<float> sample_loss;
     Matrix<float> log_ypc = y_pred_clipped; log_ypc.apply(logf);    //log(y_pred_clipped)
     Matrix<float> log_omypc = (1.0F - y_pred_clipped).apply(logf); //log(1 - y_pred_clipped)
 
-    sample_loss = (-1.0F * (log_ypc.mul(y_true))).add(
+    sample_loss = -1.0F * (
+        log_ypc.mul(y_true)
+    ).add(
         (1.0F - y_true).mul(log_omypc)
     );
 
@@ -50,9 +52,9 @@ BinaryCrossEntropy::_backward(const Matrix<float>& y_true)
     // (-y_true/y_pred + (1-y_true)/(1-y_pred)) / outputs
     // scaled by number of samples
     dInput = (
-        -1.0F * matrix::divide(y_true, y_pred_clipped)
+       -1.0F * matrix::divide(y_true, y_pred_clipped)
     ).add( 
-        matrix::divide(1.0F - y_true, 1.0F - y_pred_clipped) 
+       matrix::divide(1.0F - y_true, 1.0F - y_pred_clipped) 
     );
     dInput = (dInput / outputs) / samples; 
 }
