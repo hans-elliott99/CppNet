@@ -388,6 +388,41 @@ Matrix<T>::shape()
     std::cout << "(" << _shape_i << ", " << _shape_j << ")\n";
 }
 
+template <typename T> double
+Matrix<T>::mean()
+{
+    if (data.empty())
+        return 0;
+    
+    double const count = static_cast<double>(data.size());
+    return std::reduce(data.begin(), data.end(), 0.0) / count;
+}
+template <typename T> T
+Matrix<T>::sum()
+{
+    if (data.empty())
+        return 0;
+    return std::reduce(data.begin(), data.end(), 0.0);
+}
+
+template <typename T> double
+Matrix<T>::sd()
+{
+    // Credit : https://stackoverflow.com/questions/7616511/calculate-mean-and-standard-deviation-from-a-vector-of-samples-in-c-using-boos
+    double const count = static_cast<double>(data.size());
+    double const mu    = static_cast<double>( this->mean() );
+    std::vector<double> diff(data.size());
+
+    std::transform(
+        data.begin(), data.end(), diff.begin(),
+        [mu](double x) { return x - mu; }
+    );
+
+    double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
+    
+    return std::sqrt(sq_sum / count);
+}
+
 
 
 /**

@@ -1,9 +1,12 @@
 #include "layer.hpp"
 
 
-Layer::Layer(size_t n_in, size_t n_out, bool use_bias)
+Layer::Layer(size_t n_in, size_t n_out, bool use_bias) :
+    use_bias(use_bias), 
+    n_in(n_in), n_out(n_out)
 {
-    use_bias = use_bias;
+    // use_bias = use_bias;
+    // n_in = n_in; n_out = n_out;
 
     weight = Matrix<float>(n_in, n_out);
     Wgrad = Matrix<float>(n_in, n_out); //defaults to 0
@@ -15,7 +18,8 @@ Layer::Layer(size_t n_in, size_t n_out, bool use_bias)
     }
 }
 
-Matrix<float> Layer::_layer_forward(const Matrix<float>& X)
+Matrix<float> 
+Layer::_layer_forward(const Matrix<float>& X)
 {
     assert (X.size(1) == weight.size(0));
 
@@ -57,6 +61,37 @@ Layer::_layer_backward(const Matrix<float>& X, const Matrix<float>& grad_flow)
 
     return dInput;
 }
+
+void
+Layer::_xavier_normal( float gain, std::default_random_engine &gen)
+{
+    float std2;
+    float _in = static_cast<float>(n_in);
+    float _out = static_cast<float>(n_out);
+
+    // Weights come from Normal Dist (0, std^2) where
+    // std = gain * sqrt(2 / (n_in + n_out))
+    std2 = powf(
+        (gain * sqrtf(2.0F / (_in + _out))) 
+        ,2.0F
+    );
+
+    std::normal_distribution<float> norm(0, std2);
+
+    // Populate weight data with 
+    for (float& e : weight.data)
+    {
+        e = norm(gen);
+    }
+    if (use_bias) 
+    {
+        for (float& e : bias.data)
+        {
+            e = norm(gen);
+        }
+    }
+}
+
 
 ////////////////////////////////////////////////////////
                     /*LINEAR*/

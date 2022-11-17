@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <functional>
 #include <algorithm>
+#include <numeric>
 
 #pragma once
 
@@ -67,11 +68,15 @@ public:
     // Broadcasting
     Matrix broadcast(size_t dim, size_t length) const;
  
-    // Print info
+    // Get info
     void print(int nrow = -1, int precis = 3, bool sci = false);
 
     void shape();
     
+    double mean();
+    double sd();
+    T sum();
+
     //vector methods
     size_t size(size_t axis = 0) const;
 

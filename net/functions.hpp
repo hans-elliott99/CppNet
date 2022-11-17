@@ -13,7 +13,7 @@ float relu(float x);
 float relu_derivative(float x);
 
 template <typename T>
-T random(int low, int high)
+T random(T low, T high)
 {
     return low + static_cast<T>(rand()) / ( static_cast<T>(RAND_MAX / (high - low)) );
 }

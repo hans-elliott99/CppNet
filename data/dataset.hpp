@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <vector>
 #include <iostream>
+#include <numeric>
+#include <random>
 #include "../net/functions.hpp"
 #include "../matrix/matrix.hpp"
 
@@ -34,7 +36,7 @@ public:
     ~Dataset();    
 
     // Training, Testing Splits
-    void make_split(double ptrain);
+    void make_split(double ptrain, bool shuffle = false);
 
     // Dataset dimensions
     // void printshape(DataSplit s);

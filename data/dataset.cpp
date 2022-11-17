@@ -28,9 +28,19 @@ Dataset::Dataset(std::string filename)
 Dataset::~Dataset() {}
 
 // Training, Testing Splits
-void Dataset::make_split(double ptrain)
-{
-    for (size_t i {0}; i < _X.size(); i++)
+void Dataset::make_split(double ptrain, bool shuffle)
+{   
+    // Vector of row indices which can be randomly shuffle
+    std::vector<size_t> rowIndx(_X.size());
+    std::iota(rowIndx.begin(), rowIndx.end(), 0); //fill with 0...N
+    if (shuffle)
+    {
+        // auto rd = std::random_device {}; //If we want to seed the shuffler
+        auto rng = std::default_random_engine {}; //include rd() if seeding
+        std::shuffle(std::begin(rowIndx), std::end(rowIndx), rng);
+    }
+
+    for (size_t i : rowIndx)
     {
         if (random<double>(0, 1) < ptrain) //functions.h
         {
