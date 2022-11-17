@@ -1,5 +1,6 @@
 
 #include "matrix.hpp"
+#pragma once
 
 // Default constructor
 template <typename T>
@@ -16,16 +17,16 @@ Matrix<T>::Matrix(size_t shape_i, size_t shape_j):
 template <typename T> T& 
 Matrix<T>::operator()(size_t i, size_t j)
 {
-    assert (i < _shape_i && "`i` index out of range.");
-    assert (j < _shape_j && "`j` index out of range.");
+    ASSERT (i < _shape_i && "`i` index out of range.");
+    ASSERT (j < _shape_j && "`j` index out of range.");
     return data[i*_shape_j + j]; 
 }
 
 template <typename T> T const& 
 Matrix<T>::operator()(size_t i, size_t j) const
 {
-    assert (i < _shape_i && "`i` index out of range.");
-    assert (j < _shape_j && "`j` index out of range.");
+    ASSERT (i < _shape_i && "`i` index out of range.");
+    ASSERT (j < _shape_j && "`j` index out of range.");
     return data[i*_shape_j + j]; 
 }
 
@@ -68,6 +69,7 @@ Matrix<T>::Row(int row, int colBegin, int colEnd) const
         return _stridedSlice(index(row, colBegin), colBegin-colEnd+1, -1);
 }
 
+
 template <typename T> std::vector<T> 
 Matrix<T>::Column(int col, int rowBegin, int rowEnd) const
 {
@@ -77,30 +79,6 @@ Matrix<T>::Column(int col, int rowBegin, int rowEnd) const
     else
         return _stridedSlice(index(rowBegin, col), rowBegin-rowEnd+1, -_shape_j);
 }
-
-template <typename T> std::vector<size_t>
-Matrix<T>::whichTrue(bool (*fun)(T)) const
-{
-    std::vector<size_t> indices;
-    // Where the function evaluates to true, store the index
-    for (size_t n = 0; n <_shape_i*_shape_j; n++)
-    {
-        if ((*fun)(this->data[n]) == true)
-        {
-            indices.push_back(n);
-        }
-    }
-    return indices;
-}
-
-// template <typename T> Matrix<T>
-// Matrix<T>::copy() const
-// {
-//     Matrix<T> out(0,0);
-//     out.data = data;
-//     return out;
-// }
-
 
 
 template <typename T> std::vector<T>
@@ -119,8 +97,6 @@ Matrix<T>::_stridedSlice(int start, int length, int stride) const
     return out;
 }
 
-
-
 /**
  * std::vector-like methods
 */
@@ -137,7 +113,7 @@ Matrix<T>::size(size_t axis) const
 /**
  * Modifiers
 */
-template <typename T> void 
+template <typename T> Matrix<T>& 
 Matrix<T>::add(const Matrix<T>& B)
 {
     const size_t Brows = B.size(0);
@@ -146,13 +122,13 @@ Matrix<T>::add(const Matrix<T>& B)
 
     if (Brows != _shape_i)
     {
-        assert (Bcols == _shape_j && (Brows == 1 | Brows == 0) 
+        ASSERT (Bcols == _shape_j && (Brows == 1 | Brows == 0) 
                 && "Dimensions do not match and could not be broadcasted.");
         _B = B.broadcast(0, _shape_i);
     }
     else if (Bcols != _shape_j)
     {
-        assert (Brows == _shape_i && (Bcols == 1 | Bcols == 0) 
+        ASSERT (Brows == _shape_i && (Bcols == 1 | Bcols == 0) 
                 && "Dimensions do not match and could not be broadcasted.");
         _B = B.broadcast(1, _shape_j);
     } 
@@ -166,9 +142,11 @@ Matrix<T>::add(const Matrix<T>& B)
         data.begin(),
         std::plus<T>()
     );
+
+    return *this;
 }
 
-template <typename T> void 
+template <typename T> Matrix<T>& 
 Matrix<T>::mul(const Matrix<T>& B)
 {
     const size_t Brows = B.size(0);
@@ -177,13 +155,13 @@ Matrix<T>::mul(const Matrix<T>& B)
 
     if (Brows != _shape_i)
     {
-        assert (Bcols == _shape_j && (Brows == 1 | Brows == 0) 
+        ASSERT (Bcols == _shape_j && (Brows == 1 | Brows == 0) 
                 && "Dimensions do not match and could not be broadcasted.");
         _B = B.broadcast(0, _shape_i);
     }
     else if (Bcols != _shape_j)
     {
-        assert (Brows == _shape_i && (Bcols == 1 | Bcols == 0) 
+        ASSERT (Brows == _shape_i && (Bcols == 1 | Bcols == 0) 
                 && "Dimensions do not match and could not be broadcasted.");
         _B = B.broadcast(1, _shape_j);
     } 
@@ -197,39 +175,47 @@ Matrix<T>::mul(const Matrix<T>& B)
         data.begin(),
         std::multiplies<T>()
     );
+
+    return *this;
 }
 
 
-
-template <typename T> void 
+template <typename T> Matrix<T>& 
 Matrix<T>::fill(T value)
 {
     data = std::vector<T>(_shape_i*_shape_j, value);
+    return *this;
 }
-template <typename T> void 
+
+template <typename T> Matrix<T>& 
 Matrix<T>::zero()
 {
     this->fill(0);
+    return *this;
 }
 
-template <typename T> void 
+template <typename T> Matrix<T>& 
 Matrix<T>::diagonal(T value)
 {
-    assert (_shape_i == _shape_j); //n x n only
+    ASSERT (_shape_i == _shape_j); //n x n only
     for (size_t i {0}; i < _shape_i; i++)
         data[i*_shape_j + i] = value;
+    
+    return *this;
 }
 
-template <typename T> void 
+template <typename T> Matrix<T>& 
 Matrix<T>::randomize(double low, double high)
 {
     for (size_t n = 0; n < _shape_i*_shape_j; n++)
     {
         data[n] = matrix::random<T>(low, high);
     }
+    
+    return *this;
 }
 
-template <typename T> void 
+template <typename T> Matrix<T>& 
 Matrix<T>::transpose()
 {
     //https://stackoverflow.com/questions/9227747/in-place-transposition-of-a-matrix
@@ -246,31 +232,28 @@ Matrix<T>::transpose()
 
     data = result;
     std::swap(_shape_i, _shape_j);
+
+    return *this;
 }
-
-
-
-
 
 
 /**
  * APPLY
 */
 
-template <typename T> void 
+template <typename T> Matrix<T>& 
 Matrix<T>::apply(std::function<T(T)> fun)
 {
-    for (size_t i {0}; i < _shape_i; i++)
-    {
-        std::transform(
-            data.begin(), data.end(),
-            data.begin(),
-            fun
-        );
-    }
+    std::transform(
+        data.begin(), data.end(),
+        data.begin(),
+        fun
+    );
+
+    return *this;
 }
 
-template <typename T> void
+template <typename T> Matrix<T>&
 Matrix<T>::colApply(T (*fun)(std::vector<T>&))
 {
     std::vector<T> result;
@@ -278,7 +261,7 @@ Matrix<T>::colApply(T (*fun)(std::vector<T>&))
 
     std::vector<T> col;
     T value;
-    for (size_t j {0}; j < _shape_j; j++)
+    for (size_t j = 0; j < _shape_j; j++)
     {
         col = Column(j); //make fn that returns pointers instead of copying the column's data?
         value = (*fun)(col);   
@@ -287,6 +270,28 @@ Matrix<T>::colApply(T (*fun)(std::vector<T>&))
 
     data = result;
     _shape_i = 1;
+
+    return *this;
+}
+
+template <typename T> Matrix<T>&
+Matrix<T>::rowApply(T (*fun)(std::vector<T>&))
+{
+    std::vector<T> result;
+    result.reserve(_shape_i);
+
+    std::vector<T> row;
+    T value;
+    for (size_t i = 0; i < _shape_i; i++)
+    {
+        row = Row(i);
+        value = (*fun)(row);
+        result.push_back(value);
+    }
+    data = result;
+    _shape_j = 1;
+
+    return *this;
 }
 
 /**
@@ -301,7 +306,7 @@ Matrix<T>::broadcast(size_t dim, size_t length) const
 
     if (dim == 0) 
     {
-        assert ((this->size(0)==1 | this->size(0)==0) 
+        ASSERT ((this->size(0)==1 | this->size(0)==0) 
                     && "The size of the brodacast dimension must be 1 or 0.");
         // For broadcasting along the i dimension, repeat the entire
         // vector length times in the j direction. 
@@ -314,7 +319,7 @@ Matrix<T>::broadcast(size_t dim, size_t length) const
     }
     else
     {
-        assert ((this->size(1)==1 | this->size(1)==0) 
+        ASSERT ((this->size(1)==1 | this->size(1)==0) 
             && "The size of the brodacast dimension must be 1 or 0.");
 
         // For broadcasting along the j dimension, simply repeat the 
@@ -338,19 +343,44 @@ Matrix<T>::broadcast(size_t dim, size_t length) const
 /**
  * Utilities
 */
+template <typename T> std::vector<size_t>
+Matrix<T>::whichTrue(bool (*fun)(T)) const
+{
+    std::vector<size_t> indices;
+    // Where the function evaluates to true, store the index
+    for (size_t n = 0; n <_shape_i*_shape_j; n++)
+    {
+        if ((*fun)(this->data[n]) == true)
+        {
+            indices.push_back(n);
+        }
+    }
+    return indices;
+}
+
+
 template <typename T> void 
-Matrix<T>::print(int nrow)
+Matrix<T>::print(int nrow, int precis, bool sci)
 {
     if (nrow == -1) 
         {nrow = _shape_i; }
 
+    std::cout << std::fixed;
+    if (sci)
+        std::cout << std::setprecision(precis) << std::scientific;
+    else
+        std::cout << std::setprecision(precis);
+
     for (size_t i {0}; i < nrow; i++)
     {
         for (size_t j {0}; j < _shape_j; j++)
-            {std::cout << FIXED_PRECIS(data[i*_shape_j + j]) << " \t"; }
+            {                 
+                std:: cout << data[i*_shape_j + j] << " \t";
+            }
         std::cout<<'\n';
     }
 }
+
 
 template <typename T> void 
 Matrix<T>::shape()
@@ -369,7 +399,7 @@ matrix::matmul(const Matrix<T>& A, const Matrix<T>& B)
 {
     const size_t Arows = A.size(0); const size_t Acols = A.size(1);
     const size_t Brows = B.size(0); const size_t Bcols = B.size(1);
-    assert (Acols == Brows);
+    ASSERT (Acols == Brows);
 
     Matrix<T> Out(Arows, Bcols);
     // https://stackoverflow.com/questions/16737298/what-is-the-fastest-way-to-transpose-a-matrix-in-c
@@ -392,7 +422,7 @@ matrix::matmul(const Matrix<T>& A, const Matrix<T>& B)
 template <typename T> Matrix<T> 
 matrix::matsum(const Matrix<T>& A, const Matrix<T>& B)
 {
-    assert (A.size(0) == B.size(0)); assert (A.size(1) == B.size(1));
+    ASSERT (A.size(0) == B.size(0)); ASSERT (A.size(1) == B.size(1));
 
     Matrix<T> Out(A.size(0), A.size(1));
     for (size_t i {0}; i < A.size(0); i++)
@@ -402,6 +432,24 @@ matrix::matsum(const Matrix<T>& A, const Matrix<T>& B)
             B.data.begin(),
             Out.data.begin(),
             std::plus<T>()
+        );
+    }
+    return Out;
+}
+
+template <typename T> Matrix<T> 
+matrix::divide(const Matrix<T>& A, const Matrix<T>& B)
+{
+    ASSERT (A.size(0) == B.size(0)); ASSERT (A.size(1) == B.size(1));
+
+    Matrix<T> Out(A.size(0), A.size(1));
+    for (size_t i {0}; i < A.size(0); i++)
+    {
+        std::transform(
+            A.data.begin(), A.data.end(), 
+            B.data.begin(),
+            Out.data.begin(),
+            std::divides<T>()
         );
     }
     return Out;
@@ -434,6 +482,24 @@ T matrix::vecSum(std::vector<T> &vec)
     for (auto& n : vec)
         sum += n;
     return sum;
+}
+
+template <typename T>
+T matrix::vecMean(std::vector<T> &vec)
+{
+    T sum = 0;
+    for (auto& n : vec)
+        sum += n;
+    return (sum / static_cast<T>(vec.size()));
+}
+
+template <typename T>
+T matrix::mean(Matrix<T> &A)
+{
+    T sum = 0;
+    for (auto& n : A.data)
+        sum += n;
+    return (sum / static_cast<T>(A.nelements()));
 }
 
 

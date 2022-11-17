@@ -1,5 +1,5 @@
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <vector>
 #include <assert.h>
 #include <functional>
@@ -7,10 +7,10 @@
 
 #pragma once
 
-#define FIXED_PRECIS(x) std::fixed <<std::setprecision(3)<<(x)
+#define ASSERT(condition) \
+     { if(!(condition)){ std::cerr << "ASSERT FAILED: " << #condition << " @ " << __FILE__ << " (" << __LINE__ << ")" << std::endl; } }
 
-// Row-major ordering
-// Element [i,j] is at (i * _shape_j + j)
+// Row-major ordering: Element [i,j] is at (i * _shape_j + j)
 template <typename T>
 class Matrix
 {
@@ -38,72 +38,79 @@ public:
 
     // Modify inplace    
     ////implement chaining https://blog.stratifylabs.dev/device/2020-12-15-Method-Chaining-in-Cpp/#:~:text=Method%20chaining%20in%20C%2B%2B%20is,another%20method%20can%20be%20called.
-    void fill(T value);
-    void zero();
+    Matrix& fill(T value);
+    Matrix& zero();
     
-    void diagonal(T value = 1);
+    Matrix& diagonal(T value = 1);
 
-    void randomize(double low = 0, double high = 1);
+    Matrix& randomize(double low = 0, double high = 1);
 
-    void add(const Matrix& B);
-    void mul(const Matrix& B);
+    Matrix& add(const Matrix& B);
 
-    void apply(std::function<T(T)> fun);
+    Matrix& mul(const Matrix& B);
 
-    void colApply(T (*fun)(std::vector<T>&));
+    Matrix& apply(std::function<T(T)> fun);
 
-    void rowApply(T (*fun)(std::vector<T>&));
+    Matrix& colApply(T (*fun)(std::vector<T>&));
 
-    void transpose();
+    Matrix& rowApply(T (*fun)(std::vector<T>&));
+
+    Matrix& transpose();
 
     // Access elements
     std::vector<T> Row( int row, int colBegin = 0, int colEnd = -1 ) const;
+    std::vector<T>& viewRow( int row, int colBegin = 0, int colEnd = -1 ) const;
 
     std::vector<T> Column( int col, int rowBegin = 0, int rowEnd = -1 ) const;
-    //// Matrix<T> copyslice(int rowBegin = 0, int colBegin = 0, int rowEnd = -1,  int colEnd = -1) const;
+        // Matrix copyslice(int rowBegin = 0, int colBegin = 0, int rowEnd = -1,  int colEnd = -1) const;
 
     // Broadcasting
-    Matrix<T> broadcast(size_t dim, size_t length) const;
+    Matrix broadcast(size_t dim, size_t length) const;
  
     // Print info
-    void print(int nrow = -1);
+    void print(int nrow = -1, int precis = 3, bool sci = false);
 
     void shape();
     
     //vector methods
     size_t size(size_t axis = 0) const;
 
-public:
-
+    //operators
     T& operator()(size_t i, size_t j);
+
     T const& operator()(size_t i, size_t j) const;
+
     std::vector<T> operator[](size_t i);
 
-    template <typename Y>
-    friend std::ostream& operator<<(std::ostream& stream, Matrix<Y>& matrix);
+    template <typename Y> friend std::ostream& operator<<(std::ostream& stream, Matrix<Y>& matrix);
 };
 
 namespace matrix
 {
     template <typename T> Matrix<T> matmul(const Matrix<T>& A, const Matrix<T>& B);
 
+
     template <typename T> Matrix<T> matsum(const Matrix<T>& A, const Matrix<T>& B);
+
+    template <typename T> Matrix<T> divide(const Matrix<T>& A, const Matrix<T>& B);
 
     template <typename T> Matrix<T> transpose(const Matrix<T>& A);
 
     template <typename T> T random(double low, double high);
 
     template <typename T> T vecSum(std::vector<T> &vec);
+
+    template <typename T> T vecMean(std::vector<T> &vec);
+
+    template <typename T> T mean(Matrix<T> &A);
 }
 
-// https://stackoverflow.com/questions/8752837/undefined-reference-to-template-class-constructor
-template class Matrix<float>;
-template class Matrix<double>;
-template class Matrix<int>;
 
 
-
-// Overload Operators
+/** OVERLOADED OPERATORS
+ *  
+ * Matrix & scalar combinations:
+*/
 
 // A + s
 template <typename T> Matrix<T> 
@@ -180,3 +187,10 @@ operator/(T scalar, const Matrix<T>& A)
     );
     return output;
 }
+
+
+
+// https://stackoverflow.com/questions/8752837/undefined-reference-to-template-class-constructor
+template class Matrix<float>;
+template class Matrix<double>;
+template class Matrix<int>;

@@ -121,8 +121,8 @@ ReLU::backward(const Matrix<float>& X, const Matrix<float>& grad_flow)
     // for chain rule, so can simplify to setting grad to 0 where inp < 0)
     Matrix<float> dReluInp {grad_flow};
     std::vector<size_t> zero_idx;
+    auto is_below_zero = [](float e) {return (e <= 0.0F); };
 
-    auto is_below_zero = [](float e) {return (e <= 0.0); };
     zero_idx = _activ_inputs.whichTrue(is_below_zero);
     
     for (size_t n : zero_idx)
@@ -171,10 +171,11 @@ Sigmoid::backward(const Matrix<float>& X, const Matrix<float>& grad_flow)
     Matrix<float> dSigmoid;
 
     // grad_flow * (1 - sigmoid(x)) * sigmoid(x)
-    dSigmoid = (1.0F - _activ_outputs);
-    dSigmoid.mul(_activ_outputs);
+    dSigmoid = (1.0F - _activ_outputs).mul(_activ_outputs);
     dSigmoid.mul(grad_flow);
 
+    // Backprop the layer
+    Matrix<float> dInput {_layer_backward(X, dSigmoid)};
+
+    return dInput;
 }
-
-
