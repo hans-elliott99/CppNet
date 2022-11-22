@@ -6,7 +6,10 @@
 #include "data/dataset.hpp"
 #include "matrix/matrix.hpp"
 
-// TODO: Saving & loading of weights, automated layer stacking 
+// TODO: Saving & loading of weights
+// TODO: Automated layer stacking
+// TODO: Pass in dataset & specify model to a train.exe from the command-line 
+// TODO: Make an inference.exe to predict given a saved model
 
 std::vector<Matrix<float>>
 load_dataset(double ptrain, bool shuffle)
@@ -33,8 +36,8 @@ void train()
 {
     Matrix<float> X, Y;
     auto data_list = load_dataset(0.8, true); //ptrain, shuffle
-    X = data_list[1]; //Xtrain
-    Y = data_list[2]; //Ytrain
+    X = data_list[0]; //Xtrain
+    Y = data_list[1]; //Ytrain
     std::cout << "X.shape = "; X.shape();
     std::cout << "Y.shape = "; Y.shape();
 
@@ -59,7 +62,7 @@ void train()
     Matrix<float> grad_flow;
 
 
-    for (size_t step = 0; step < 1000; step++)
+    for (size_t step = 0; step < 100; step++)
     {
         sgd.zero_grad();
         // Forward

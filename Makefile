@@ -1,8 +1,2 @@
 all:
-	g++ -o main main.cpp utils/matrix.cpp utils/functions.cpp data/dataset.cpp -lmingw32 
-
-
-
-
-#-I C:\users\hanse\eigen
-
+	g++ -fdiagnostics-color=always -g main.cpp -o main.exe -O3 data/*.cpp net/*.cpp
