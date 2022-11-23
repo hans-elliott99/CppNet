@@ -12,7 +12,11 @@
 
 #define FIXED_DOUBL(x) std::fixed << std::setprecision(6) << (x)
 
-// namespace nn
+
+enum LayerType{
+    DenseLinear = 0, DenseReLU, DenseSigmoid
+};
+
 class Layer
 {   
 public:
@@ -24,6 +28,7 @@ public:
     bool use_bias = true;
     size_t n_in;
     size_t n_out;
+    std::string name;
 
 public:
 
@@ -48,6 +53,7 @@ protected:
 class Linear : public Layer
 {
 public:
+
     Linear(size_t n_in, size_t n_out, bool use_bias = true);
 
     void initXavierNormal(std::default_random_engine &gen, float gain = 1) {_xavier_normal(gain, gen); };
@@ -64,6 +70,7 @@ private:
     Matrix<float> _activ_inputs; //save for calculating derivative.
 
 public:
+
     ReLU(size_t n_in, size_t n_out, bool use_bias = true);
 
     void initXavierNormal(std::default_random_engine &gen, float gain = 1.4142135623730951) {_xavier_normal(gain, gen); };  //gain = sqrt(2)
@@ -79,6 +86,7 @@ public:
     Matrix<float> _activ_outputs;
 
 public:
+
     Sigmoid(size_t n_in, size_t n_out, bool use_bias = true);
 
     void initXavierNormal(std::default_random_engine &gen, float gain = 1) {_xavier_normal(gain, gen); };

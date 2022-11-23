@@ -3,8 +3,10 @@
 
 Layer::Layer(size_t n_in, size_t n_out, bool use_bias) :
     use_bias(use_bias), 
-    n_in(n_in), n_out(n_out)
+    n_in(n_in), 
+    n_out(n_out)
 {
+    name = "BaseLayer";
     // use_bias = use_bias;
     // n_in = n_in; n_out = n_out;
 
@@ -98,6 +100,7 @@ Layer::_xavier_normal( float gain, std::default_random_engine &gen)
 Linear::Linear(size_t n_in, size_t n_out, bool use_bias) :
     Layer(n_in, n_out, use_bias)
 {
+    name = "DenseLinear";
     // Initialize Weights
     double scalar {1.0 / n_in};
            scalar = sqrt(scalar);
@@ -126,6 +129,7 @@ Linear::backward(const Matrix<float>& X, const Matrix<float>& grad_flow)
 ReLU::ReLU(size_t n_in, size_t n_out, bool use_bias) :
     Layer(n_in, n_out, use_bias)
 {
+    name = "DenseReLU";
     // Initialize Weights
     double scalar {1.0 / n_in};
            scalar = sqrt(scalar);
@@ -179,6 +183,8 @@ ReLU::backward(const Matrix<float>& X, const Matrix<float>& grad_flow)
 Sigmoid::Sigmoid(size_t n_in, size_t n_out, bool use_bias) :
     Layer(n_in, n_out, use_bias)
 {
+    name = "DenseSigmoid";
+    // Initialize weights
     double scalar {1.0 / n_in};
         scalar = sqrt(scalar);
 

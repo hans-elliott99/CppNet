@@ -5,28 +5,36 @@
 void
 Optim::add_layer(Layer & layer)
 {
-    _layers.push_back(&layer);
+    _layers.emplace_back( &layer );
 }
+
+void
+Optim::add_model(MLP & model)
+{
+    for (size_t i=0; i < model.n_layers; i++)
+        _layers.emplace_back( model.layers[i] );
+}
+
 
 void
 Optim::zero_grad()
 // Set Gradients to Zero
 {
-    for (auto l : _layers)
+    for (size_t i = 0; i < _layers.size(); i++)
     {
-        l->Wgrad.zero();
-        if (l->use_bias)
-            l->Bgrad.zero();
+        _layers[i]->Wgrad.zero();
+        if (_layers[i]->use_bias)
+            _layers[i]->Bgrad.zero();
     }
 }
 
 void
 OptimSGD::step(float learning_rate)
 {
-    for (auto l : _layers)
+    for (size_t i = 0; i < _layers.size(); i++)
     {
-        l->weight.add(-learning_rate * l->Wgrad);
-        if (l->use_bias)
-            l->bias.add(-learning_rate * l->Bgrad);
+        _layers[i]->weight.add(-learning_rate * _layers[i]->Wgrad);
+        if (_layers[i]->use_bias)
+            _layers[i]->bias.add(-learning_rate * _layers[i]->Bgrad);
     }
 }
