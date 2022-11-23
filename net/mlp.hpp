@@ -19,7 +19,7 @@ private:
 
 
 public:
-    size_t n_layers;
+    size_t n_layers = 0;
     std::vector< std::shared_ptr<Layer> > layers; //list of layers
     std::vector< Matrix<float> > outputs;         //list of layer outputs from one forward pass
 
@@ -27,6 +27,12 @@ public:
     MLP(size_t inputDim,
         std::initializer_list<size_t> hiddenDims,
         std::initializer_list<LayerType> layerTypes);
+    
+    MLP(size_t inputDim) : _inputDim(inputDim) {};
+
+    void add_layer(LayerType layerType, size_t n_neurons);
+
+    void initXavier(std::default_random_engine &gen); //TODO: add layer indexing
 
     Matrix<float> forward(Matrix<float> &X);
 
